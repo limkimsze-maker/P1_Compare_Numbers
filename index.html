@@ -54,10 +54,8 @@
     .viewport{
       position:fixed;
       inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
       padding: 10px;
+      overflow:hidden;
     }
     .stage{
       width: calc(var(--baseW) * 1px);
@@ -65,7 +63,14 @@
       transform-origin: top left;
       background:#fff;
       border-radius: 18px;
-      position:relative;
+      position:absolute;
+      left:0;
+      top:0;
+      will-change: transform;
+    }
+    .stage.portrait{
+      width: 520px;
+      height: 1050px;
     }
 
     .wrap{
@@ -88,7 +93,8 @@
       display:flex;
       align-items:flex-end;
       gap: 10px;
-      flex-wrap:wrap;
+      flex-wrap:nowrap;
+      min-width:0;
     }
     .titleText{
       font-size: 38px;
@@ -173,30 +179,39 @@
       display:grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      align-items:end;
+      align-items:stretch;
       padding: 6px 6px 8px;
     }
     .tensArea, .onesArea{
       border-radius: 14px;
       background:#fff;
       display:flex;
-      align-items:flex-end;
+      align-items:center;
       justify-content:center;
       padding: 6px 4px;
       min-height: 210px;
+      overflow:hidden;
     }
-    .onesArea{
-      flex-direction: column;
+    .blockRack{
+      width:100%;
+      height:100%;
+      display:flex;
+      flex-direction:column;
       align-items:center;
-      justify-content:flex-end;
-      gap: 6px;
+      justify-content:center;
+      gap: 8px;
     }
-    .tensArea{
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-content:flex-end;
+    .blockRow{
+      display:grid;
+      grid-template-columns: repeat(5, max-content);
+      justify-content:center;
+      justify-items:center;
+      align-items:end;
       gap: 6px;
+      width:100%;
     }
+    .tensArea .blockRow{ min-height: var(--tenH); }
+    .onesArea .blockRow{ min-height: var(--oneS); align-items:center; }
 
     .rodSvg{
       width: var(--tenW);
@@ -212,6 +227,14 @@
       filter: drop-shadow(0 8px 12px rgba(2,6,23,.08));
       user-select:none;
     }
+
+    /* Clear colour contrast: blue tens rods, orange/yellow ones cubes */
+    .rodSvg.tenBlock .cls-1{ fill:#38bdf8; }
+    .rodSvg.tenBlock .cls-2{ fill:#1d4ed8; }
+    .rodSvg.tenBlock .cls-3{ fill:#0284c7; }
+    .cubeSvg.oneBlock .cls-1{ fill:#fde047; }
+    .cubeSvg.oneBlock .cls-2{ fill:#f97316; }
+    .cubeSvg.oneBlock .cls-3{ fill:#f59e0b; }
 
     .pvCard{
       border-radius: 24px;
@@ -404,10 +427,20 @@
       border-radius: 12px;
       border:1px solid #cbd5e1;
       padding: 0 10px;
-      font-size: 16px;
-      font-weight: 800;
+      font-size: 22px;
+      font-weight: 900;
       outline:none;
       background:#fff;
+      text-align:center;
+      letter-spacing: 6px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", sans-serif;
+    }
+    .setNum[type="password"]{
+      -webkit-text-security: disc;
+    }
+    .setNum::-ms-reveal,
+    .setNum::-ms-clear{
+      display:none;
     }
 
     .toggleRow{
@@ -458,6 +491,61 @@
       border:1px solid #cbd5e1;
       background:#fff;
       white-space:nowrap;
+    }
+
+    /* Portrait mode keeps the activity readable instead of shrinking a wide layout. */
+    .stage.portrait .wrap{ padding: 14px; gap: 8px; }
+    .stage.portrait .topbar{ align-items:center; gap:8px; }
+    .stage.portrait .titleText{ font-size: 28px; }
+    .stage.portrait .hdrBlank{ width: 78px; height: 48px; font-size: 28px; border-radius:14px; }
+    .stage.portrait .settingsBtn{ display:none; }
+    .stage.portrait .grid{ grid-template-columns: 1fr; gap: 10px; }
+    .stage.portrait .side{ padding: 10px; border-radius: 20px; }
+    .stage.portrait .blocks{ min-height: 190px; padding: 4px; }
+    .stage.portrait .tensArea,
+    .stage.portrait .onesArea{ min-height: 170px; }
+    .stage.portrait .pvCell{ min-height: 74px; padding: 6px; }
+    .stage.portrait .pvLabel{ font-size: 22px; }
+    .stage.portrait .pvValue{ width: 70px; height: 40px; font-size: 26px; }
+    .stage.portrait .pvInput{ font-size: 26px; }
+    .stage.portrait .answers{ padding: 8px 10px; }
+    .stage.portrait .row{ font-size: 22px; gap: 8px; margin: 3px 0; }
+    .stage.portrait .blank{ width: 80px; height: 48px; font-size: 26px; }
+    .stage.portrait .btn{ padding: 8px 11px; border-radius: 12px; }
+    .stage.portrait .btnRow{ gap: 8px; margin-top: 6px; }
+
+
+
+    /* Celebration: confetti appears only after a fully correct Check. */
+    .celebrationLayer{
+      position:fixed;
+      inset:0;
+      overflow:hidden;
+      pointer-events:none;
+      z-index:55;
+    }
+    .confettiPiece{
+      position:absolute;
+      top:-32px;
+      width:12px;
+      height:18px;
+      border-radius:4px;
+      opacity:.96;
+      transform:translate3d(0,-40px,0) rotate(0deg);
+      animation: confettiFall var(--dur, 2s) cubic-bezier(.16,.9,.38,1) forwards;
+      animation-delay: var(--delay, 0s);
+    }
+    @keyframes confettiFall{
+      0%{ transform:translate3d(0,-40px,0) rotate(0deg); opacity:1; }
+      100%{ transform:translate3d(var(--dx, 0px), calc(100vh + 90px), 0) rotate(var(--rot, 720deg)); opacity:.88; }
+    }
+    @media (prefers-reduced-motion: reduce){
+      .confettiPiece{ animation-duration:.8s; }
+    }
+
+    @media (max-width: 760px){
+      body.drawer-open .viewport{ padding-right: 10px; }
+      .drawer{ width: min(420px, 96vw); }
     }
   </style>
 </head>
@@ -604,12 +692,12 @@
       <div class="field">
         <label>Set the two numbers (1–99)</label>
         <div class="numRow">
-          <input class="setNum" id="setLeft" type="number" min="1" max="99" step="1" value="53">
-          <input class="setNum" id="setRight" type="number" min="1" max="99" step="1" value="49">
+          <input class="setNum" id="setLeft" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" value="53" aria-label="Left number hidden">
+          <input class="setNum" id="setRight" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" value="49" aria-label="Right number hidden">
           <button class="btn" id="applyBtn">Apply</button>
           <button class="btn" id="randomBtn">Random</button>
         </div>
-        <div class="help">If both numbers are the same, the right number will be nudged by 1.</div>
+        <div class="help">The numbers are hidden as dots so pupils cannot see them. If both numbers are the same, the right number will be nudged by 1.</div>
       </div>
 
       <div class="field">
@@ -647,25 +735,44 @@
   </aside>
 
   <script>
-    const BASE_W = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--baseW')) || 980;
-    const BASE_H = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--baseH')) || 690;
+    const LANDSCAPE_W = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--baseW')) || 980;
+    const LANDSCAPE_H = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--baseH')) || 690;
+    const PORTRAIT_W = 520;
+    const PORTRAIT_H = 1050;
     const stage = document.getElementById('stage');
 
+    function getBaseSize(){
+      const usePortrait = (window.innerWidth < 760 && window.innerHeight >= window.innerWidth) || window.innerHeight > window.innerWidth * 1.12;
+      stage.classList.toggle('portrait', usePortrait);
+      return usePortrait
+        ? { w: PORTRAIT_W, h: PORTRAIT_H }
+        : { w: LANDSCAPE_W, h: LANDSCAPE_H };
+    }
+
     function fitStage(){
-      const pad = 20;
-      const vw = Math.max(320, window.innerWidth - pad);
-      const vh = Math.max(320, window.innerHeight - pad);
+      const margin = 10;
+      const { w: baseW, h: baseH } = getBaseSize();
 
-      // If drawer open, reserve its width so stage doesn't get covered
+      // On wider screens, keep the settings drawer from covering the stage.
+      // On phones, the drawer overlays so the activity does not shrink to nothing.
       const drawerOpen = document.body.classList.contains('drawer-open');
-      const dw = drawerOpen ? drawer.getBoundingClientRect().width : 0;
-      const availW = Math.max(320, vw - dw);
+      const reserveDrawer = drawerOpen && window.innerWidth >= 800;
+      const dw = reserveDrawer ? drawer.getBoundingClientRect().width : 0;
 
-      const s = Math.min(availW / BASE_W, vh / BASE_H);
+      const availW = Math.max(280, window.innerWidth - dw - margin * 2);
+      const availH = Math.max(280, window.innerHeight - margin * 2);
+      const s = Math.min(availW / baseW, availH / baseH);
+
+      const left = margin + Math.max(0, (availW - baseW * s) / 2);
+      const top = margin + Math.max(0, (availH - baseH * s) / 2);
+
+      stage.style.left = `${left}px`;
+      stage.style.top = `${top}px`;
       stage.style.transform = `scale(${s})`;
     }
     window.addEventListener('resize', fitStage);
     window.addEventListener('orientationchange', fitStage);
+    window.addEventListener('load', fitStage);
 
     let leftNum = 53;
     let rightNum = 49;
@@ -751,12 +858,32 @@
       el.classList.add(ok ? 'good' : 'bad');
     }
 
-    function cloneSvgFromTemplate(tpl, className){
+    function cloneSvgFromTemplate(tpl, ...classNames){
       const frag = tpl.content.cloneNode(true);
       const svg = frag.querySelector('svg');
-      svg.classList.add(className);
+      classNames.filter(Boolean).forEach(className => svg.classList.add(className));
       svg.setAttribute('preserveAspectRatio','xMidYMid meet');
       return svg;
+    }
+
+    function fillBlockRows(container, tpl, svgClasses, count){
+      const rack = document.createElement('div');
+      rack.className = 'blockRack';
+
+      const topRow = document.createElement('div');
+      topRow.className = 'blockRow topRow';
+
+      const bottomRow = document.createElement('div');
+      bottomRow.className = 'blockRow bottomRow';
+
+      for (let i=0; i<count; i++){
+        const row = i < 5 ? topRow : bottomRow;
+        row.appendChild(cloneSvgFromTemplate(tpl, ...svgClasses));
+      }
+
+      rack.appendChild(topRow);
+      rack.appendChild(bottomRow);
+      container.appendChild(rack);
     }
 
     function applySizes(){
@@ -785,8 +912,9 @@
       onesContainer.innerHTML = '';
       const { tens, ones } = splitTensOnes(n);
 
-      for (let i=0; i<tens; i++) tensContainer.appendChild(cloneSvgFromTemplate(tplTen, 'rodSvg'));
-      for (let i=0; i<ones; i++) onesContainer.appendChild(cloneSvgFromTemplate(tplOne, 'cubeSvg'));
+      fillBlockRows(tensContainer, tplTen, ['rodSvg', 'tenBlock'], tens);
+      fillBlockRows(onesContainer, tplOne, ['cubeSvg', 'oneBlock'], ones);
+      fitStage();
     }
 
     function setPVBox(el, mode, valueOrPlaceholder){
@@ -851,6 +979,94 @@
       syncQuickButtons();
     }
 
+
+
+    let celebrationLayer = null;
+    let clapAudioCtx = null;
+
+    function getCelebrationLayer(){
+      if (!celebrationLayer){
+        celebrationLayer = document.createElement('div');
+        celebrationLayer.className = 'celebrationLayer';
+        celebrationLayer.setAttribute('aria-hidden','true');
+        document.body.appendChild(celebrationLayer);
+      }
+      return celebrationLayer;
+    }
+
+    function playClapSound(){
+      try{
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        clapAudioCtx = clapAudioCtx || new AudioCtx();
+        const ctx = clapAudioCtx;
+        if (ctx.state === 'suspended') ctx.resume();
+
+        const makeClap = (offset, gainLevel) => {
+          const now = ctx.currentTime + offset;
+          const length = Math.floor(ctx.sampleRate * 0.055);
+          const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i=0; i<length; i++){
+            const decay = 1 - (i / length);
+            data[i] = (Math.random() * 2 - 1) * decay * decay;
+          }
+
+          const noise = ctx.createBufferSource();
+          noise.buffer = buffer;
+
+          const band = ctx.createBiquadFilter();
+          band.type = 'bandpass';
+          band.frequency.value = 1200 + Math.random() * 850;
+          band.Q.value = 0.8;
+
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.exponentialRampToValueAtTime(gainLevel, now + 0.006);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+
+          noise.connect(band);
+          band.connect(gain);
+          gain.connect(ctx.destination);
+          noise.start(now);
+          noise.stop(now + 0.1);
+        };
+
+        // Several quick noise bursts give a small applause effect.
+        [0, .045, .095, .16, .23, .31].forEach((offset, i)=> makeClap(offset, i < 2 ? .35 : .24));
+      } catch(err){
+        // Silent fail keeps the activity working even if audio is blocked.
+      }
+    }
+
+    function burstConfetti(){
+      const layer = getCelebrationLayer();
+      layer.innerHTML = '';
+      const colours = ['#ef4444','#f97316','#facc15','#22c55e','#06b6d4','#3b82f6','#a855f7','#ec4899'];
+      const pieces = 130;
+
+      for (let i=0; i<pieces; i++){
+        const piece = document.createElement('div');
+        piece.className = 'confettiPiece';
+        piece.style.left = (Math.random() * 100) + 'vw';
+        piece.style.background = colours[i % colours.length];
+        piece.style.setProperty('--dx', ((Math.random() * 260) - 130) + 'px');
+        piece.style.setProperty('--rot', ((Math.random() * 900) + 360) + 'deg');
+        piece.style.setProperty('--dur', (1.65 + Math.random() * .95) + 's');
+        piece.style.setProperty('--delay', (Math.random() * .22) + 's');
+        if (i % 3 === 0) piece.style.borderRadius = '999px';
+        if (i % 4 === 0) piece.style.width = '8px';
+        layer.appendChild(piece);
+      }
+
+      window.setTimeout(()=>{ layer.innerHTML = ''; }, 3200);
+    }
+
+    function celebrateCorrect(){
+      playClapSound();
+      burstConfetti();
+    }
+
     function checkAnswers(){
       clearMarks();
 
@@ -902,6 +1118,8 @@
         : (!revealPVNumbers && !pvOk)
           ? 'Try again. Fill in the Tens and Ones correctly.'
           : 'Try again. Count the tens and ones.';
+
+      if (ok) celebrateCorrect();
     }
 
     [gtA,gtB,ltA,ltB].forEach(inp=>{
