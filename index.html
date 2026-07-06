@@ -5,7 +5,7 @@
 <link rel="shortcut icon" href="./kimsze_sharp16.ico?v=20260111a">
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>P1 Compare Numbers (1–99) — Count & Fill</title>
+  <title>P1 More / Fewer — Blocks + Reveal Options</title>
 
   <style>
     :root{
@@ -13,12 +13,6 @@
       --ink:#0f172a;
       --muted:#64748b;
       --line:#e2e8f0;
-
-      --cardA:#ffedd5;
-      --cardB:#e0f2fe;
-
-      --input:#e8f6df;
-      --inputLine:#9bbf87;
 
       --radius:22px;
       --shadow:0 14px 40px rgba(2,6,23,.10);
@@ -29,10 +23,33 @@
       --baseW: 980;
       --baseH: 690;
 
-      /* ✅ smaller defaults so blocks fit nicely (still teacher-adjustable) */
-      --tenW: 12px;
-      --tenH: 64px; /* auto-set in JS */
-      --oneS: 16px;
+      /* ✅ smaller fonts to free space (MORE SPACE FOR BLOCKS) */
+      --S-title: 18px;
+      --S-line: 15px;
+      --S-small: 12px;
+
+      /* DEFAULTS (will be auto-overridden by JS) */
+      --cubeS: 20px;
+      --rodW: 78px;
+      --rodH: 35px;
+      --gap: 10px;
+
+      /* ones grid columns (auto-changed by JS) */
+      --onesCols: 5;
+
+      /* left (red) palette */
+      --L1:#ff5a5a; --L2:#b91c1c; --L3:#ef4444;
+
+      /* right (blue) palette */
+      --R1:#60a5fa; --R2:#1d4ed8; --R3:#3b82f6;
+
+      /* greyed difference */
+      --G1:#cbd5e1; --G2:#64748b; --G3:#94a3b8;
+
+      --input:#e8f6df;
+      --inputLine:#9bbf87;
+
+      --panelGreen:#eaf6e6;
     }
 
     *{box-sizing:border-box}
@@ -46,16 +63,12 @@
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", sans-serif;
     }
 
-    /* When drawer is open, reserve space so it DOESN'T cover the stage */
-    body.drawer-open .viewport{
-      padding-right: calc(var(--drawerW) + 10px);
-    }
+    body.drawer-open .viewport{ padding-right: calc(var(--drawerW) + 10px); }
 
     .viewport{
-      position:fixed;
-      inset:0;
+      position:fixed; inset:0;
+      display:flex; align-items:center; justify-content:center;
       padding: 10px;
-      overflow:hidden;
     }
     .stage{
       width: calc(var(--baseW) * 1px);
@@ -63,221 +76,219 @@
       transform-origin: top left;
       background:#fff;
       border-radius: 18px;
-      position:absolute;
-      left:0;
-      top:0;
-      will-change: transform;
+      position:relative;
+      overflow:hidden;
     }
-    .stage.portrait{
-      width: 520px;
-      height: 1050px;
+
+    /* ✅ credit moved to top-right */
+    .creditTop{
+      position:absolute;
+      right: 12px;
+      top: 10px;
+      z-index: 40;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(2,6,23,.08);
+      padding: 5px 9px;
+      border-radius: 999px;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+      pointer-events:none;
+      backdrop-filter: blur(4px);
     }
 
     .wrap{
-      width:100%;
-      height:100%;
-      padding: 16px 16px 12px;
-      display:flex;
-      flex-direction:column;
-      gap: 10px;
+      width:100%; height:100%;
+      padding: 8px 10px 8px;
+      display:flex; flex-direction:column;
+      gap: 8px; /* ✅ tighter */
     }
 
     .topbar{
       display:flex;
       align-items:flex-start;
       justify-content:space-between;
-      gap: 12px;
-    }
-
-    .titleLine{
-      display:flex;
-      align-items:flex-end;
       gap: 10px;
-      flex-wrap:nowrap;
-      min-width:0;
+      padding-right: 210px; /* space so top-right credit never overlaps */
     }
     .titleText{
-      font-size: 38px;
+      font-size: var(--S-title);
       font-weight: 900;
-      line-height: 1.02;
+      line-height: 1.05;
       margin:0;
       letter-spacing:.2px;
     }
-    .hdrBlank{
-      width: 96px;
-      height: 56px;
+    .settingsBtn{
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--ink);
+      border-radius:999px;
+      padding:7px 11px;
+      font-weight:900;
+      cursor:pointer;
+      box-shadow: 0 8px 18px rgba(2,6,23,.06);
+      white-space:nowrap;
+      height: 34px;       /* ✅ smaller */
+      align-self:flex-start;
+      font-size: 12px;    /* ✅ smaller */
+    }
+    .settingsBtn:active{ transform: translateY(1px); }
+
+    .problem{
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      background:#fff;
+      padding: 7px 10px 7px;
+      display:flex;
+      flex-direction:column;
+      gap: 5px;
+    }
+    .pLine{
+      font-size: var(--S-line);
+      font-weight: 900;
+      line-height: 1.12;
+      margin:0;
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      gap: 7px;
+    }
+    .pLine .blankN{
+      width: 78px;       /* ✅ smaller */
+      height: 34px;      /* ✅ smaller */
+      border-radius: 14px;
+      border: 3px solid var(--inputLine);
+      background: var(--input);
+      font-size: 15px;   /* ✅ smaller */
+      font-weight: 900;
+      text-align:center;
+      outline:none;
+    }
+    .pLine .blankN.left{ border-color: rgba(185,28,28,.40); }
+    .pLine .blankN.right{ border-color: rgba(29,78,216,.40); }
+    .blankN.answerShown, .pvInput.answerShown{
+      color:#0f172a;
+      background: rgba(254,243,199,.55);
+    }
+    .blankN.answerShown{ border-color:#f59e0b; }
+
+    .panel{
+      flex: 1;
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      background: var(--panelGreen);
+      padding: 10px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    /* ensure Tens/Ones card always visible */
+    .sideBox{
+      border-radius: 18px;
+      background: rgba(255,255,255,.55);
+      border: 1px solid rgba(2,6,23,.10);
+      padding: 10px;
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+      min-height: 0;
+      overflow:hidden;
+    }
+
+    .blockArea{
+      flex: 1 1 auto;
+      min-height: 0;
+      border-radius: 16px;
+      background: rgba(255,255,255,.62);
+      border: 1px solid rgba(2,6,23,.08);
+      padding: 8px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-items:stretch;
+      overflow:hidden;
+    }
+
+    .tensArea, .onesArea{
+      border-radius: 14px;
+      background: rgba(255,255,255,.80);
+      border: 1px solid rgba(2,6,23,.08);
+      padding: 8px;
+      overflow:hidden;
+    }
+
+    .tensArea{
+      display:grid;
+      grid-template-columns: repeat(var(--rodCols), var(--rodW));
+      grid-auto-rows: var(--rodH);
+      gap: var(--gap);
+      align-content:flex-start;
+      justify-content:flex-start;
+      padding-top: 8px; /* ✅ shift up a bit */
+    }
+
+    /* ✅ ones: show as 5+4 for 9 etc (cols=5), and keep visible */
+    .onesArea{
+      display:grid;
+      grid-template-columns: repeat(var(--onesCols), var(--cubeS));
+      grid-auto-rows: var(--cubeS);
+      gap: var(--gap);
+      align-content:start;
+      justify-content:start;   /* ✅ use space better than far-right */
+      padding-top: 8px;        /* ✅ shift up a bit */
+      overflow:auto;           /* ✅ after regrouping, extra ones can be scrolled instead of spilling out */
+      scroll-behavior:smooth;
+    }
+    .onesArea::-webkit-scrollbar{ width: 9px; height: 9px; }
+    .onesArea::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:999px; }
+    .onesArea::-webkit-scrollbar-track{ background:rgba(226,232,240,.45); border-radius:999px; }
+
+    .pvCard{
+      margin-top: 6px;
+      border-radius: 18px;
+      overflow:hidden;
+      border:2px solid #cbd5e1;
+      background:#fff;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      flex: 0 0 auto;
+    }
+
+    .isHidden{
+      display:none !important;
+    }
+    .pvCell{
+      padding: 6px 10px 7px;
+      display:flex;
+      flex-direction:column;
+      gap: 2px;
+      align-items:center;
+      justify-content:center;
+      min-height: 70px; /* ✅ shorter so it never hides */
+    }
+    .pvCell.tens{ background: linear-gradient(180deg, #ffd08a 0%, #ffedd5 100%); }
+    .pvCell.ones{ background: linear-gradient(180deg, #9bdcff 0%, #e0f2fe 100%); }
+
+    .pvLabel{
+      font-weight: 900;
+      font-size: 18px; /* ✅ smaller */
+      letter-spacing:.2px;
+      line-height: 1.05;
+    }
+    .pvValue{
+      width: 104px;  /* ✅ smaller */
+      height: 42px;  /* ✅ smaller */
       border-radius: 16px;
       border: 3px solid var(--inputLine);
       background: var(--input);
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size: 32px;
-      font-weight: 900;
-      color: rgba(15,23,42,.95);
-      user-select:none;
-    }
-
-    .settingsBtn{
-      border:1px solid var(--line);
-      background:#fff;
-      color:var(--ink);
-      border-radius:999px;
-      padding:10px 14px;
-      font-weight:800;
-      cursor:pointer;
-      box-shadow: 0 8px 18px rgba(2,6,23,.06);
-      white-space:nowrap;
-      height: 44px;
-      align-self:flex-start;
-    }
-    .settingsBtn:active{ transform: translateY(1px); }
-
-    .floatGear{
-      position:absolute;
-      right: 14px;
-      bottom: 14px;
-      z-index: 5;
-      width: 56px;
-      height: 56px;
-      border-radius: 18px;
-      border:1px solid var(--line);
-      background:#fff;
-      box-shadow: 0 14px 30px rgba(2,6,23,.14);
-      cursor:pointer;
-      font-size: 22px;
-      font-weight: 900;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-    .floatGear:active{ transform: translateY(1px); }
-
-    .grid{
-      flex: 1;
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-      align-items:stretch;
-      min-height: 0;
-    }
-
-    .side{
-      border:1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      background:#fff;
-      padding: 12px 12px 10px;
-      display:flex;
-      flex-direction:column;
-      min-height:0;
-    }
-
-    .blocks{
-      flex: 1;
-      min-height: 0;
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      align-items:stretch;
-      padding: 6px 6px 8px;
-    }
-    .tensArea, .onesArea{
-      border-radius: 14px;
-      background:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: 6px 4px;
-      min-height: 210px;
-      overflow:hidden;
-    }
-    .blockRack{
-      width:100%;
-      height:100%;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap: 8px;
-    }
-    .blockRow{
-      display:grid;
-      grid-template-columns: repeat(5, max-content);
-      justify-content:center;
-      justify-items:center;
-      align-items:end;
-      gap: 6px;
-      width:100%;
-    }
-    .tensArea .blockRow{ min-height: var(--tenH); }
-    .onesArea .blockRow{ min-height: var(--oneS); align-items:center; }
-
-    .rodSvg{
-      width: var(--tenW);
-      height: var(--tenH);
-      display:block;
-      filter: drop-shadow(0 8px 12px rgba(2,6,23,.10));
-      user-select:none;
-    }
-    .cubeSvg{
-      width: var(--oneS);
-      height: var(--oneS);
-      display:block;
-      filter: drop-shadow(0 8px 12px rgba(2,6,23,.08));
-      user-select:none;
-    }
-
-    /* Clear colour contrast: blue tens rods, orange/yellow ones cubes */
-    .rodSvg.tenBlock .cls-1{ fill:#38bdf8; }
-    .rodSvg.tenBlock .cls-2{ fill:#1d4ed8; }
-    .rodSvg.tenBlock .cls-3{ fill:#0284c7; }
-    .cubeSvg.oneBlock .cls-1{ fill:#fde047; }
-    .cubeSvg.oneBlock .cls-2{ fill:#f97316; }
-    .cubeSvg.oneBlock .cls-3{ fill:#f59e0b; }
-
-    .pvCard{
-      border-radius: 24px;
-      overflow:hidden;
-      border:2px solid #cbd5e1;
-      background:#fff;
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-    }
-    .pvCell{
-      padding: 8px 8px 8px;
-      display:flex;
-      flex-direction:column;
-      gap: 6px;
-      align-items:center;
-      justify-content:center;
-      min-height: 96px;
-    }
-    .pvCell.tens{ background: linear-gradient(180deg, #ffd08a 0%, var(--cardA) 100%); }
-    .pvCell.ones{ background: linear-gradient(180deg, #9bdcff 0%, var(--cardB) 100%); }
-
-    .pvLabel{
-      font-weight: 900;
-      font-size: 28px;
-      letter-spacing:.3px;
-      text-shadow: 0 2px 0 rgba(255,255,255,.35);
-    }
-
-    .pvValue{
-      width: 78px;
-      height: 46px;
-      border-radius: 14px;
-      border: 3px solid rgba(2,6,23,.12);
-      background: rgba(255,255,255,.75);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size: 30px;
-      font-weight: 900;
-    }
-    .pvValue.editable{
-      border-color: var(--inputLine);
-      background: var(--input);
     }
     .pvInput{
       width:100%;
@@ -286,66 +297,159 @@
       outline:none;
       background:transparent;
       text-align:center;
-      font-size: 30px;
+      font-size: 20px; /* ✅ smaller */
       font-weight: 900;
     }
+    .pvValue.good{ border-color:#16a34a; box-shadow: 0 0 0 4px rgba(34,197,94,.15); }
+    .pvValue.bad{ border-color:#ef4444; box-shadow: 0 0 0 4px rgba(239,68,68,.14); }
+    .pvValue.answerShown{ border-color:#f59e0b; box-shadow: 0 0 0 4px rgba(245,158,11,.14); }
 
     .answers{
       border:1px solid var(--line);
       border-radius: var(--radius);
-      padding: 10px 12px 8px;
+      padding: 8px 10px 9px; /* ✅ tighter */
       background:#fff;
       box-shadow: var(--shadow);
     }
-    .row{
+
+    .eqCard{
+      border-radius: 18px;
+      background:#dff2f6;
+      padding: 7px 10px; /* ✅ tighter */
       display:flex;
-      flex-wrap:wrap;
       align-items:center;
+      justify-content:center;
       gap: 10px;
-      font-size: 28px;
-      font-weight: 900;
-      margin: 6px 0;
     }
+    .eqSym{
+      font-size: 26px; /* ✅ smaller */
+      font-weight: 900;
+      line-height: 1;
+    }
+
     .blank{
-      width: 104px;
-      height: 58px;
+      width: 84px;   /* ✅ smaller */
+      height: 46px;  /* ✅ smaller */
       border-radius: 16px;
       border: 3px solid var(--inputLine);
       background: var(--input);
-      font-size: 32px;
+      font-size: 24px; /* ✅ smaller */
       font-weight: 900;
       text-align:center;
       outline:none;
     }
+    .blank.small{ width: 74px; height: 46px; }
+
     .blank.good{ border-color:#16a34a; box-shadow: 0 0 0 4px rgba(34,197,94,.15); }
     .blank.bad{ border-color:#ef4444; box-shadow: 0 0 0 4px rgba(239,68,68,.14); }
 
-    /* ✅ mark place value boxes too */
-    .pvValue.good{
-      border-color:#16a34a !important;
-      box-shadow: 0 0 0 4px rgba(34,197,94,.15);
-    }
-    .pvValue.bad{
-      border-color:#ef4444 !important;
-      box-shadow: 0 0 0 4px rgba(239,68,68,.14);
-    }
-
-    .btnRow{
+    .sentence{
+      margin-top: 7px;
+      font-size: 15px; /* ✅ smaller */
+      font-weight: 900;
+      line-height: 1.12;
       display:flex;
-      gap:10px;
       flex-wrap:wrap;
       align-items:center;
-      margin-top: 8px;
+      gap: 8px;
+      justify-content:center;
+      text-align:center;
+    }
+
+    .rodSvg{
+      width: var(--rodW);
+      height: var(--rodH);
+      display:block;
+      user-select:none;
+      filter: drop-shadow(0 10px 16px rgba(2,6,23,.18));
+      outline: 1px solid rgba(2,6,23,.10);
+      border-radius: 6px;
+    }
+    .cubeSvg{
+      width: var(--cubeS);
+      height: var(--cubeS);
+      display:block;
+      user-select:none;
+      filter: drop-shadow(0 10px 16px rgba(2,6,23,.16));
+    }
+
+    .leftColor{ --c1: var(--L1); --c2: var(--L2); --c3: var(--L3); }
+    .rightColor{ --c1: var(--R1); --c2: var(--R2); --c3: var(--R3); }
+    .diffGrey{
+      --c1: var(--G1) !important; --c2: var(--G2) !important; --c3: var(--G3) !important;
+      filter: grayscale(.2) brightness(1.05) drop-shadow(0 6px 10px rgba(2,6,23,.08));
+    }
+
+    /* slower regroup animation */
+    .rodFocusGlow{
+      position: relative;
+      z-index: 4;
+      animation: rodGlowPulse .95s ease-in-out infinite;
+      transform-origin: center center;
+      will-change: filter, transform;
+    }
+    @keyframes rodGlowPulse{
+      0%{
+        filter: drop-shadow(0 10px 16px rgba(2,6,23,.18)) drop-shadow(0 0 0 rgba(34,197,94,0));
+        transform: scale(1);
+      }
+      50%{
+        filter: drop-shadow(0 10px 16px rgba(2,6,23,.18)) drop-shadow(0 0 18px rgba(34,197,94,.95));
+        transform: scale(1.06);
+      }
+      100%{
+        filter: drop-shadow(0 10px 16px rgba(2,6,23,.18)) drop-shadow(0 0 0 rgba(34,197,94,0));
+        transform: scale(1);
+      }
+    }
+    .rodBorrow{
+      position:relative;
+      z-index: 3;
+      transition: transform 1.15s ease, opacity 1.15s ease;
+      will-change: transform, opacity;
+    }
+    .cubeSpawn{
+      transform: scale(.18);
+      opacity: 0;
+      transition: transform .50s ease, opacity .50s ease, filter .45s ease;
+      will-change: transform, opacity, filter;
+      filter: drop-shadow(0 0 12px rgba(34,197,94,.65));
+    }
+    .cubeSpawn.in{
+      transform: scale(1);
+      opacity: 1;
+    }
+    .cubeFresh{
+      filter: drop-shadow(0 0 14px rgba(34,197,94,.78));
+    }
+
+    .dock{
+      position:absolute;
+      right: 12px;
+      bottom: 12px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      z-index: 25;
+      align-items:flex-end;
+      pointer-events: none;
+    }
+    .dock .dockRow{
+      display:flex;
+      gap: 10px;
+      pointer-events: auto;
     }
     .btn{
       border:1px solid var(--line);
       background:#fff;
       border-radius: 14px;
-      padding: 10px 14px;
+      padding: 8px 11px; /* ✅ smaller */
       font-weight: 900;
       cursor:pointer;
       box-shadow: 0 10px 20px rgba(2,6,23,.08);
       user-select:none;
+      white-space:nowrap;
+      font-size: 13px; /* ✅ smaller */
     }
     .btn:active{ transform: translateY(1px); }
     .btn.primary{
@@ -353,24 +457,21 @@
       background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
       color:#fff;
     }
-    .btn.toggle-on{
-      border-color:#16a34a;
-      box-shadow: 0 10px 20px rgba(2,6,23,.08), 0 0 0 4px rgba(34,197,94,.12);
-    }
-
-    .msg{ font-weight: 800; color: var(--muted); }
-
-    .credit{
-      text-align:right;
-      font-size: 12px;
+    .dockMsg{
+      pointer-events:none;
+      font-weight: 900;
       color: var(--muted);
-      margin-top: 6px;
+      font-size: 10px;   /* ✅ smaller */
+      line-height: 1.12;
+      text-align:right;
+      min-height: 13px;
+      max-width: 360px;
+      padding-right: 2px;
     }
 
-    /* Teacher drawer */
     .drawerOverlay{
       position:fixed; inset:0;
-      background: rgba(0,0,0,0); /* ✅ no dimming (same brightness) */
+      background: rgba(0,0,0,0);
       display:none;
       z-index: 50;
     }
@@ -427,22 +528,11 @@
       border-radius: 12px;
       border:1px solid #cbd5e1;
       padding: 0 10px;
-      font-size: 22px;
-      font-weight: 900;
+      font-size: 16px;
+      font-weight: 800;
       outline:none;
       background:#fff;
-      text-align:center;
-      letter-spacing: 6px;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", sans-serif;
     }
-    .setNum[type="password"]{
-      -webkit-text-security: disc;
-    }
-    .setNum::-ms-reveal,
-    .setNum::-ms-clear{
-      display:none;
-    }
-
     .toggleRow{
       display:flex;
       align-items:center;
@@ -474,91 +564,17 @@
     }
     .switch:checked{ background: #22c55e; border-color:#16a34a; }
     .switch:checked::after{ transform: translateX(24px); }
-
-    .sliderRow{
-      display:grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items:center;
-      margin-top: 8px;
-    }
-    input[type="range"]{ width:100%; }
-    .pill{
-      font-weight:900;
-      font-size:12px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border:1px solid #cbd5e1;
-      background:#fff;
-      white-space:nowrap;
-    }
-
-    /* Portrait mode keeps the activity readable instead of shrinking a wide layout. */
-    .stage.portrait .wrap{ padding: 14px; gap: 8px; }
-    .stage.portrait .topbar{ align-items:center; gap:8px; }
-    .stage.portrait .titleText{ font-size: 28px; }
-    .stage.portrait .hdrBlank{ width: 78px; height: 48px; font-size: 28px; border-radius:14px; }
-    .stage.portrait .settingsBtn{ display:none; }
-    .stage.portrait .grid{ grid-template-columns: 1fr; gap: 10px; }
-    .stage.portrait .side{ padding: 10px; border-radius: 20px; }
-    .stage.portrait .blocks{ min-height: 190px; padding: 4px; }
-    .stage.portrait .tensArea,
-    .stage.portrait .onesArea{ min-height: 170px; }
-    .stage.portrait .pvCell{ min-height: 74px; padding: 6px; }
-    .stage.portrait .pvLabel{ font-size: 22px; }
-    .stage.portrait .pvValue{ width: 70px; height: 40px; font-size: 26px; }
-    .stage.portrait .pvInput{ font-size: 26px; }
-    .stage.portrait .answers{ padding: 8px 10px; }
-    .stage.portrait .row{ font-size: 22px; gap: 8px; margin: 3px 0; }
-    .stage.portrait .blank{ width: 80px; height: 48px; font-size: 26px; }
-    .stage.portrait .btn{ padding: 8px 11px; border-radius: 12px; }
-    .stage.portrait .btnRow{ gap: 8px; margin-top: 6px; }
-
-
-
-    /* Celebration: confetti appears only after a fully correct Check. */
-    .celebrationLayer{
-      position:fixed;
-      inset:0;
-      overflow:hidden;
-      pointer-events:none;
-      z-index:55;
-    }
-    .confettiPiece{
-      position:absolute;
-      top:-32px;
-      width:12px;
-      height:18px;
-      border-radius:4px;
-      opacity:.96;
-      transform:translate3d(0,-40px,0) rotate(0deg);
-      animation: confettiFall var(--dur, 2s) cubic-bezier(.16,.9,.38,1) forwards;
-      animation-delay: var(--delay, 0s);
-    }
-    @keyframes confettiFall{
-      0%{ transform:translate3d(0,-40px,0) rotate(0deg); opacity:1; }
-      100%{ transform:translate3d(var(--dx, 0px), calc(100vh + 90px), 0) rotate(var(--rot, 720deg)); opacity:.88; }
-    }
-    @media (prefers-reduced-motion: reduce){
-      .confettiPiece{ animation-duration:.8s; }
-    }
-
-    @media (max-width: 760px){
-      body.drawer-open .viewport{ padding-right: 10px; }
-      .drawer{ width: min(420px, 96vw); }
-    }
   </style>
 </head>
 
 <body>
-  <!-- ✅ Amended SVGs stored as templates -->
-  <template id="tplOne">
+  <template id="tplCube">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56.5 64" aria-hidden="true" focusable="false">
       <defs>
         <style>
-          .cls-1 { fill: #f7b12b; }
-          .cls-2 { fill: #c97e00; }
-          .cls-3 { fill: #e48f00; }
+          .cls-1 { fill: var(--c1); }
+          .cls-2 { fill: var(--c2); }
+          .cls-3 { fill: var(--c3); }
           .cls-4 { fill: #fff; }
         </style>
       </defs>
@@ -569,13 +585,13 @@
     </svg>
   </template>
 
-  <template id="tplTen">
+  <template id="tplRod">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 39.18 206" aria-hidden="true" focusable="false">
       <defs>
         <style>
-          .cls-1 { fill: #30a5ff; }
-          .cls-2 { fill: #1f66cc; }
-          .cls-3 { fill: #1b8eea; }
+          .cls-1 { fill: var(--c1); }
+          .cls-2 { fill: var(--c2); }
+          .cls-3 { fill: var(--c3); }
           .cls-4 { fill: #fff; }
         </style>
       </defs>
@@ -599,86 +615,95 @@
 
   <div class="viewport">
     <div class="stage" id="stage">
+      <div class="creditTop">Designed by Lim Kim Sze © 2026</div>
+
       <div class="wrap">
         <div class="topbar">
-          <div class="titleLine">
-            <div class="titleText">Compare</div>
-            <div class="hdrBlank" id="hdrA">??</div>
-            <div class="titleText">and</div>
-            <div class="hdrBlank" id="hdrB">??</div>
-            <div class="titleText">.</div>
-          </div>
+          <h1 class="titleText">Let’s Try!</h1>
           <button class="settingsBtn" id="openSettings">⚙️ Teacher Settings</button>
         </div>
 
-        <div class="grid">
-          <div class="side">
-            <div class="blocks">
-              <div class="tensArea" id="leftTens"></div>
-              <div class="onesArea" id="leftOnes"></div>
+        <div class="problem" aria-live="polite">
+          <p class="pLine">
+            There are
+            <input class="blankN left" id="qRed" inputmode="numeric" maxlength="2" aria-label="Red cubes number">
+            red cubes.
+          </p>
+          <p class="pLine">
+            There are
+            <input class="blankN right" id="qBlue" inputmode="numeric" maxlength="2" aria-label="Blue cubes number">
+            blue cubes.
+          </p>
+          <p class="pLine" id="qLine">How many fewer blue cubes than red cubes are there?</p>
+        </div>
+
+        <div class="panel">
+          <div class="sideBox">
+            <div class="blockArea">
+              <div class="tensArea leftColor" id="L_tens"></div>
+              <div class="onesArea leftColor" id="L_ones"></div>
             </div>
-            <div class="pvCard">
+            <div class="pvCard" aria-label="Red tens and ones">
               <div class="pvCell tens">
                 <div class="pvLabel">Tens</div>
-                <div class="pvValue" id="leftTensVal"></div>
+                <div class="pvValue" id="L_tVal"><input class="pvInput" id="L_tIn" inputmode="numeric" maxlength="1" aria-label="Red tens"></div>
               </div>
               <div class="pvCell ones">
                 <div class="pvLabel">Ones</div>
-                <div class="pvValue" id="leftOnesVal"></div>
+                <div class="pvValue" id="L_oVal"><input class="pvInput" id="L_oIn" inputmode="numeric" maxlength="1" aria-label="Red ones"></div>
               </div>
             </div>
           </div>
 
-          <div class="side">
-            <div class="blocks">
-              <div class="tensArea" id="rightTens"></div>
-              <div class="onesArea" id="rightOnes"></div>
+          <div class="sideBox">
+            <div class="blockArea">
+              <div class="tensArea rightColor" id="R_tens"></div>
+              <div class="onesArea rightColor" id="R_ones"></div>
             </div>
-            <div class="pvCard">
+            <div class="pvCard" aria-label="Blue tens and ones">
               <div class="pvCell tens">
                 <div class="pvLabel">Tens</div>
-                <div class="pvValue" id="rightTensVal"></div>
+                <div class="pvValue" id="R_tVal"><input class="pvInput" id="R_tIn" inputmode="numeric" maxlength="1" aria-label="Blue tens"></div>
               </div>
               <div class="pvCell ones">
                 <div class="pvLabel">Ones</div>
-                <div class="pvValue" id="rightOnesVal"></div>
+                <div class="pvValue" id="R_oVal"><input class="pvInput" id="R_oIn" inputmode="numeric" maxlength="1" aria-label="Blue ones"></div>
               </div>
             </div>
           </div>
         </div>
 
         <div class="answers">
-          <div class="row">
-            <input class="blank" id="gtA" inputmode="numeric" maxlength="2">
-            <span>is greater than</span>
-            <input class="blank" id="gtB" inputmode="numeric" maxlength="2">
-            <span>.</span>
+          <div class="eqCard" aria-label="Equation">
+            <input class="blank" id="eqA" inputmode="numeric" maxlength="2" aria-label="First number">
+            <span class="eqSym">−</span>
+            <input class="blank" id="eqB" inputmode="numeric" maxlength="2" aria-label="Second number">
+            <span class="eqSym">=</span>
+            <input class="blank" id="eqC" inputmode="numeric" maxlength="2" aria-label="Answer">
           </div>
 
-          <div class="row">
-            <input class="blank" id="ltA" inputmode="numeric" maxlength="2">
-            <span>is smaller than</span>
-            <input class="blank" id="ltB" inputmode="numeric" maxlength="2">
-            <span>.</span>
+          <div class="sentence" id="sLine">
+            There are <input class="blank small" id="ans" inputmode="numeric" maxlength="2" aria-label="Final answer">
+            fewer blue cubes than red cubes.
           </div>
-
-          <div class="btnRow">
-            <button class="btn primary" id="checkBtn">Check</button>
-
-            <!-- ✅ NEW quick buttons beside Check -->
-            <button class="btn" id="quickRandomBtn" title="New random numbers">Random</button>
-            <button class="btn" id="quickHeaderBtn" title="Toggle header reveal">Reveal header</button>
-            <button class="btn" id="quickPVBtn" title="Toggle Tens/Ones reveal">Reveal Tens/Ones</button>
-
-            <button class="btn" id="clearBtn">Clear</button>
-            <span class="msg" id="msg"></span>
-          </div>
-
-          <div class="credit">Designed by Lim Kim Sze © 2026</div>
         </div>
-
-        <button class="floatGear" id="openSettings2" aria-label="Open teacher settings">⚙️</button>
       </div>
+
+      <div class="dock" aria-label="Controls">
+        <div class="dockMsg" id="msg"></div>
+        <div class="dockRow">
+          <button class="btn" id="toggleQBtn">Question: FEWER</button>
+          <button class="btn" id="randomBtnMain">Random</button>
+        </div>
+        <div class="dockRow">
+          <button class="btn" id="clearBtn">Clear</button>
+          <button class="btn primary" id="checkBtn">Check</button>
+        </div>
+      </div>
+
+      <button class="settingsBtn" id="openSettings2" style="position:absolute; left:12px; bottom:12px; z-index:30;">
+        ⚙️ Settings
+      </button>
     </div>
   </div>
 
@@ -692,448 +717,733 @@
       <div class="field">
         <label>Set the two numbers (1–99)</label>
         <div class="numRow">
-          <input class="setNum" id="setLeft" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" value="53" aria-label="Left number hidden">
-          <input class="setNum" id="setRight" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" value="49" aria-label="Right number hidden">
+          <input class="setNum" id="setLeft" type="password" inputmode="numeric" maxlength="2" autocomplete="off" value="73" aria-label="Left number">
+          <input class="setNum" id="setRight" type="password" inputmode="numeric" maxlength="2" autocomplete="off" value="64" aria-label="Right number">
           <button class="btn" id="applyBtn">Apply</button>
           <button class="btn" id="randomBtn">Random</button>
         </div>
-        <div class="help">The numbers are hidden as dots so pupils cannot see them. If both numbers are the same, the right number will be nudged by 1.</div>
+        <div class="help">Left = red, Right = blue. (If equal, right is nudged.)</div>
       </div>
 
       <div class="field">
         <div class="toggleRow">
-          <span>Reveal numbers in header</span>
-          <input class="switch" id="revealHeader" type="checkbox">
+          <span>Question type: MORE (else FEWER)</span>
+          <input class="switch" id="qMore" type="checkbox">
         </div>
-        <div class="toggleRow">
-          <span>Reveal Tens/Ones values in cards</span>
-          <input class="switch" id="revealPV" type="checkbox">
-        </div>
-        <div class="help">If OFF, pupils type Tens/Ones into the card boxes.</div>
+        <div class="help">Questions auto-swap colours so they always make sense.</div>
       </div>
 
       <div class="field">
-        <label>Block sizes (adjust until they fit nicely)</label>
-
-        <div class="sliderRow">
-          <input id="tenWRange" type="range" min="8" max="22" step="1" value="12">
-          <span class="pill">Tens width: <span id="tenWVal">12</span>px</span>
+        <div class="toggleRow">
+          <span>Show Question</span>
+          <input class="switch" id="showQuestion" type="checkbox">
         </div>
-        <div class="help">Height auto-kept to your SVG aspect ratio.</div>
+        <div class="help">Turn on to reveal the red and blue cube numbers in the question blanks.</div>
+      </div>
 
-        <div class="sliderRow" style="margin-top:10px">
-          <input id="oneSRange" type="range" min="12" max="26" step="1" value="16">
-          <span class="pill">Ones size: <span id="oneSVal">16</span>px</span>
+      <div class="field">
+        <div class="toggleRow">
+          <span>Show Place Values</span>
+          <input class="switch" id="showPV" type="checkbox">
         </div>
+        <div class="help">Turn on to reveal the tens and ones numbers in the place-value boxes.</div>
       </div>
 
       <div class="field">
         <label>Quick reset (teacher)</label>
         <button class="btn" id="teacherClear">Clear pupil inputs</button>
       </div>
+
+      <div class="field">
+        <label>Note</label>
+        <div class="help">
+          Regroup animation is slower and plays a swoosh on movement.
+        </div>
+      </div>
     </div>
   </aside>
 
   <script>
-    const LANDSCAPE_W = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--baseW')) || 980;
-    const LANDSCAPE_H = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--baseH')) || 690;
-    const PORTRAIT_W = 520;
-    const PORTRAIT_H = 1050;
+    // v4: reveal values + 5-by-2 ten blocks; fresh filename to avoid cached older downloads.
+    const BASE_W = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--baseW')) || 980;
+    const BASE_H = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--baseH')) || 690;
     const stage = document.getElementById('stage');
 
-    function getBaseSize(){
-      const usePortrait = (window.innerWidth < 760 && window.innerHeight >= window.innerWidth) || window.innerHeight > window.innerWidth * 1.12;
-      stage.classList.toggle('portrait', usePortrait);
-      return usePortrait
-        ? { w: PORTRAIT_W, h: PORTRAIT_H }
-        : { w: LANDSCAPE_W, h: LANDSCAPE_H };
-    }
+    const overlay = document.getElementById('overlay');
+    const drawer = document.getElementById('drawer');
 
     function fitStage(){
-      const margin = 10;
-      const { w: baseW, h: baseH } = getBaseSize();
+      const pad = 20;
+      const vw = Math.max(320, window.innerWidth - pad);
+      const vh = Math.max(320, window.innerHeight - pad);
 
-      // On wider screens, keep the settings drawer from covering the stage.
-      // On phones, the drawer overlays so the activity does not shrink to nothing.
       const drawerOpen = document.body.classList.contains('drawer-open');
-      const reserveDrawer = drawerOpen && window.innerWidth >= 800;
-      const dw = reserveDrawer ? drawer.getBoundingClientRect().width : 0;
+      const dw = drawerOpen ? drawer.getBoundingClientRect().width : 0;
+      const availW = Math.max(320, vw - dw);
 
-      const availW = Math.max(280, window.innerWidth - dw - margin * 2);
-      const availH = Math.max(280, window.innerHeight - margin * 2);
-      const s = Math.min(availW / baseW, availH / baseH);
-
-      const left = margin + Math.max(0, (availW - baseW * s) / 2);
-      const top = margin + Math.max(0, (availH - baseH * s) / 2);
-
-      stage.style.left = `${left}px`;
-      stage.style.top = `${top}px`;
+      const s = Math.min(availW / BASE_W, vh / BASE_H);
       stage.style.transform = `scale(${s})`;
     }
     window.addEventListener('resize', fitStage);
     window.addEventListener('orientationchange', fitStage);
-    window.addEventListener('load', fitStage);
 
-    let leftNum = 53;
-    let rightNum = 49;
-    let revealHeaderNumbers = false;
-    let revealPVNumbers = false;
-
-    const TEN_ASPECT = 206.0 / 39.18;
-
-    const hdrA = document.getElementById('hdrA');
-    const hdrB = document.getElementById('hdrB');
-
-    const leftTensEl = document.getElementById('leftTens');
-    const leftOnesEl = document.getElementById('leftOnes');
-    const rightTensEl = document.getElementById('rightTens');
-    const rightOnesEl = document.getElementById('rightOnes');
-
-    const leftTensVal = document.getElementById('leftTensVal');
-    const leftOnesVal = document.getElementById('leftOnesVal');
-    const rightTensVal = document.getElementById('rightTensVal');
-    const rightOnesVal = document.getElementById('rightOnesVal');
-
-    const gtA = document.getElementById('gtA');
-    const gtB = document.getElementById('gtB');
-    const ltA = document.getElementById('ltA');
-    const ltB = document.getElementById('ltB');
-    const msg = document.getElementById('msg');
+    const tplCube = document.getElementById('tplCube');
+    const tplRod  = document.getElementById('tplRod');
 
     const setLeft = document.getElementById('setLeft');
     const setRight = document.getElementById('setRight');
+
+    const L_tens = document.getElementById('L_tens');
+    const L_ones = document.getElementById('L_ones');
+    const R_tens = document.getElementById('R_tens');
+    const R_ones = document.getElementById('R_ones');
+
+    const L_tVal = document.getElementById('L_tVal');
+    const L_oVal = document.getElementById('L_oVal');
+    const R_tVal = document.getElementById('R_tVal');
+    const R_oVal = document.getElementById('R_oVal');
+
+    const L_tIn = document.getElementById('L_tIn');
+    const L_oIn = document.getElementById('L_oIn');
+    const R_tIn = document.getElementById('R_tIn');
+    const R_oIn = document.getElementById('R_oIn');
+
+    const qRed  = document.getElementById('qRed');
+    const qBlue = document.getElementById('qBlue');
+    const qLine = document.getElementById('qLine');
+    const sLine = document.getElementById('sLine');
+
+    const eqA = document.getElementById('eqA');
+    const eqB = document.getElementById('eqB');
+    const eqC = document.getElementById('eqC');
+
+    const msg = document.getElementById('msg');
+
     const applyBtn = document.getElementById('applyBtn');
     const randomBtn = document.getElementById('randomBtn');
-    const revealHeader = document.getElementById('revealHeader');
-    const revealPV = document.getElementById('revealPV');
+    const randomBtnMain = document.getElementById('randomBtnMain');
+    const checkBtn = document.getElementById('checkBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const toggleQBtn = document.getElementById('toggleQBtn');
     const teacherClear = document.getElementById('teacherClear');
 
-    const tenWRange = document.getElementById('tenWRange');
-    const oneSRange = document.getElementById('oneSRange');
-    const tenWVal = document.getElementById('tenWVal');
-    const oneSVal = document.getElementById('oneSVal');
+    const qMore = document.getElementById('qMore');
+    const showQuestionToggle = document.getElementById('showQuestion');
+    const showPVToggle = document.getElementById('showPV');
 
-    const overlay = document.getElementById('overlay');
-    const drawer = document.getElementById('drawer');
+    function syncTeacherToggleUI(){
+      if (showQuestionToggle) showQuestionToggle.checked = showQuestionNumbers;
+      if (showPVToggle) showPVToggle.checked = showPlaceValueNumbers;
+      if (qMore) qMore.checked = (questionMode === 'more');
+    }
+
     const openSettings = document.getElementById('openSettings');
     const openSettings2 = document.getElementById('openSettings2');
     const closeSettings = document.getElementById('closeSettings');
 
-    const checkBtn = document.getElementById('checkBtn');
-    const clearBtn = document.getElementById('clearBtn');
+    let leftNum = 73;
+    let rightNum = 64;
+    let questionMode = 'fewer';
+    let showOnesOnly = false; // kept false: the teacher option has been removed
+    let showQuestionNumbers = showQuestionToggle ? showQuestionToggle.checked : false;
+    let showPlaceValueNumbers = showPVToggle ? showPVToggle.checked : false;
+    let hasChecked = false;
+    let animBusy = false;
+    let visualRegroupShown = false; // once correct visual regroup is shown, Check will not regroup again
 
-    // ✅ NEW quick buttons
-    const quickRandomBtn = document.getElementById('quickRandomBtn');
-    const quickHeaderBtn = document.getElementById('quickHeaderBtn');
-    const quickPVBtn = document.getElementById('quickPVBtn');
+    const ROD_ASPECT = 206.0 / 39.18;
+    const sleep = (ms)=> new Promise(r=>setTimeout(r, ms));
 
-    const tplTen = document.getElementById('tplTen');
-    const tplOne = document.getElementById('tplOne');
+    // force blocks smaller even when there is space
+    const FIT_SHRINK = 0.85;
+    const MAX_CUBE = 20;
+    const MAX_ROD_W = 18;
+
+    /* ✅ LOUDER swoosh sound (WebAudio) */
+    let _ac = null;
+    function audioCtx(){
+      if (_ac) return _ac;
+      _ac = new (window.AudioContext || window.webkitAudioContext)();
+      return _ac;
+    }
+    function whoosh({dur=0.38, from=900, to=160, vol=0.30}={}){ // ✅ louder default
+      try{
+        const ac = audioCtx();
+        if (ac.state === 'suspended') ac.resume();
+        const t0 = ac.currentTime + 0.01;
+
+        // noise source
+        const bufferSize = Math.floor(ac.sampleRate * dur);
+        const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i=0; i<bufferSize; i++){
+          data[i] = (Math.random()*2-1) * (1 - i/bufferSize);
+        }
+        const noise = ac.createBufferSource();
+        noise.buffer = buffer;
+
+        // filter sweep
+        const biq = ac.createBiquadFilter();
+        biq.type = 'lowpass';
+        biq.frequency.setValueAtTime(from, t0);
+        biq.frequency.exponentialRampToValueAtTime(Math.max(40,to), t0 + dur);
+
+        // gain envelope (✅ louder)
+        const g = ac.createGain();
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(vol, t0 + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+
+        noise.connect(biq).connect(g).connect(ac.destination);
+        noise.start(t0);
+        noise.stop(t0 + dur + 0.02);
+      }catch(e){
+        // ignore (audio may be blocked in some embeds)
+      }
+    }
+
+
+
+    function clapSound(){
+      try{
+        const ac = audioCtx();
+        if (ac.state === 'suspended') ac.resume();
+
+        // A short synthetic clapping sequence made from filtered noise bursts.
+        const makeClap = (offset, vol=0.42)=>{
+          const dur = 0.075;
+          const t0 = ac.currentTime + offset;
+          const bufferSize = Math.floor(ac.sampleRate * dur);
+          const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i=0; i<bufferSize; i++){
+            const fade = Math.pow(1 - i/bufferSize, 2.2);
+            data[i] = (Math.random()*2-1) * fade;
+          }
+          const noise = ac.createBufferSource();
+          noise.buffer = buffer;
+
+          const band = ac.createBiquadFilter();
+          band.type = 'bandpass';
+          band.frequency.value = 1700 + Math.random()*700;
+          band.Q.value = 0.8;
+
+          const gain = ac.createGain();
+          gain.gain.setValueAtTime(0.0001, t0);
+          gain.gain.exponentialRampToValueAtTime(vol, t0 + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+
+          noise.connect(band).connect(gain).connect(ac.destination);
+          noise.start(t0);
+          noise.stop(t0 + dur + 0.02);
+        };
+
+        [0.00,0.11,0.22,0.36,0.50,0.65,0.82,1.00].forEach((t,i)=> makeClap(t, i < 3 ? 0.46 : 0.34));
+      }catch(e){
+        // ignore if sound is blocked
+      }
+    }
+
+    function launchConfetti(){
+      const old = document.getElementById('celebrationConfetti');
+      if (old) old.remove();
+
+      const canvas = document.createElement('canvas');
+      canvas.id = 'celebrationConfetti';
+      canvas.style.position = 'fixed';
+      canvas.style.inset = '0';
+      canvas.style.width = '100vw';
+      canvas.style.height = '100vh';
+      canvas.style.pointerEvents = 'none';
+      canvas.style.zIndex = '9999';
+      document.body.appendChild(canvas);
+
+      const ctx = canvas.getContext('2d');
+      const colours = ['#ef4444','#f97316','#facc15','#22c55e','#06b6d4','#3b82f6','#a855f7','#ec4899'];
+      const resize = ()=>{
+        canvas.width = Math.floor(window.innerWidth * devicePixelRatio);
+        canvas.height = Math.floor(window.innerHeight * devicePixelRatio);
+        ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+      };
+      resize();
+
+      const pieces = Array.from({length:150}, (_,i)=>({
+        x: Math.random() * window.innerWidth,
+        y: -20 - Math.random() * window.innerHeight * 0.35,
+        w: 7 + Math.random()*7,
+        h: 9 + Math.random()*12,
+        vx: -2.2 + Math.random()*4.4,
+        vy: 3.2 + Math.random()*4.8,
+        spin: -0.25 + Math.random()*0.5,
+        angle: Math.random()*Math.PI*2,
+        colour: colours[i % colours.length]
+      }));
+
+      const start = performance.now();
+      function draw(now){
+        const elapsed = now - start;
+        ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
+        pieces.forEach(p=>{
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.035;
+          p.angle += p.spin;
+          ctx.save();
+          ctx.translate(p.x,p.y);
+          ctx.rotate(p.angle);
+          ctx.fillStyle = p.colour;
+          ctx.globalAlpha = Math.max(0, 1 - elapsed/2600);
+          ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+          ctx.restore();
+        });
+        if (elapsed < 2700){
+          requestAnimationFrame(draw);
+        } else {
+          canvas.remove();
+        }
+      }
+      window.addEventListener('resize', resize, {once:true});
+      requestAnimationFrame(draw);
+    }
+
+    function celebrateCorrect(){
+      clapSound();
+      launchConfetti();
+    }
 
     function clamp1to99(n){
       n = Number(n);
       if (!Number.isFinite(n)) return 1;
       n = Math.round(n);
-      if (n < 1) n = 1;
-      if (n > 99) n = 99;
-      return n;
+      return Math.max(1, Math.min(99, n));
     }
-    function splitTensOnes(n){
-      return { tens: Math.floor(n/10), ones: n % 10 };
-    }
+    function splitTensOnes(n){ return { tens: Math.floor(n/10), ones: n%10 }; }
     function sanitizeDigits(val, maxLen){
       const s = String(val ?? '').trim();
       if (!s) return '';
       return s.replace(/[^\d]/g,'').slice(0, maxLen);
     }
 
+    function markBox(box, ok){
+      box.classList.remove('good','bad');
+      box.classList.add(ok ? 'good' : 'bad');
+    }
+    function markInp(inp, ok){
+      inp.classList.remove('good','bad');
+      inp.classList.add(ok ? 'good' : 'bad');
+    }
     function clearMarks(){
-      [gtA,gtB,ltA,ltB].forEach(el=> el.classList.remove('good','bad'));
-      [leftTensVal,leftOnesVal,rightTensVal,rightOnesVal].forEach(el=> el.classList.remove('good','bad'));
+      [L_tVal,L_oVal,R_tVal,R_oVal].forEach(b=>b.classList.remove('good','bad'));
+      [qRed,qBlue,eqA,eqB,eqC,document.getElementById('ans')].forEach(i=> i && i.classList.remove('good','bad'));
       msg.textContent = '';
     }
 
-    function mark(el, ok){
-      el.classList.remove('good','bad');
-      el.classList.add(ok ? 'good' : 'bad');
+    function revealInput(inp, value, shouldReveal){
+      if (!inp) return;
+      if (shouldReveal){
+        inp.value = String(value);
+        inp.readOnly = true;
+        inp.tabIndex = -1;
+        inp.classList.add('answerShown');
+        inp.classList.remove('good','bad');
+      } else {
+        inp.readOnly = false;
+        inp.tabIndex = 0;
+        inp.classList.remove('answerShown');
+      }
     }
 
-    function cloneSvgFromTemplate(tpl, ...classNames){
-      const frag = tpl.content.cloneNode(true);
+    function revealPV(box, inp, value, shouldReveal){
+      revealInput(inp, value, shouldReveal);
+      if (box){
+        box.classList.toggle('answerShown', shouldReveal);
+        box.classList.remove('good','bad');
+      }
+    }
+
+    function applyVisibilityOptions(){
+      const L = splitTensOnes(leftNum);
+      const R = splitTensOnes(rightNum);
+
+      revealInput(qRed, leftNum, showQuestionNumbers);
+      revealInput(qBlue, rightNum, showQuestionNumbers);
+
+      revealPV(L_tVal, L_tIn, L.tens, showPlaceValueNumbers);
+      revealPV(L_oVal, L_oIn, L.ones, showPlaceValueNumbers);
+      revealPV(R_tVal, R_tIn, R.tens, showPlaceValueNumbers);
+      revealPV(R_oVal, R_oIn, R.ones, showPlaceValueNumbers);
+
+      syncTeacherToggleUI();
+      requestAnimationFrame(()=> {
+        fitStage();
+        autoFitAll();
+      });
+    }
+
+    function cloneCube(){
+      const frag = tplCube.content.cloneNode(true);
       const svg = frag.querySelector('svg');
-      classNames.filter(Boolean).forEach(className => svg.classList.add(className));
+      svg.classList.add('cubeSvg');
       svg.setAttribute('preserveAspectRatio','xMidYMid meet');
       return svg;
     }
-
-    function fillBlockRows(container, tpl, svgClasses, count){
-      const rack = document.createElement('div');
-      rack.className = 'blockRack';
-
-      const topRow = document.createElement('div');
-      topRow.className = 'blockRow topRow';
-
-      const bottomRow = document.createElement('div');
-      bottomRow.className = 'blockRow bottomRow';
-
-      for (let i=0; i<count; i++){
-        const row = i < 5 ? topRow : bottomRow;
-        row.appendChild(cloneSvgFromTemplate(tpl, ...svgClasses));
-      }
-
-      rack.appendChild(topRow);
-      rack.appendChild(bottomRow);
-      container.appendChild(rack);
+    function cloneRod(){
+      const frag = tplRod.content.cloneNode(true);
+      const svg = frag.querySelector('svg');
+      svg.classList.add('rodSvg');
+      svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+      return svg;
     }
-
-    function applySizes(){
-      const tenW = Math.max(8, Math.min(22, Number(tenWRange.value)));
-      const oneS = Math.max(12, Math.min(26, Number(oneSRange.value)));
-      const tenH = Math.round(tenW * TEN_ASPECT);
-
-      document.documentElement.style.setProperty('--tenW', tenW + 'px');
-      document.documentElement.style.setProperty('--tenH', tenH + 'px');
-      document.documentElement.style.setProperty('--oneS', oneS + 'px');
-
-      tenWVal.textContent = tenW;
-      oneSVal.textContent = oneS;
-
-      renderBlocks(leftTensEl, leftOnesEl, leftNum);
-      renderBlocks(rightTensEl, rightOnesEl, rightNum);
-    }
-
-    function renderHeader(){
-      hdrA.textContent = revealHeaderNumbers ? String(leftNum) : '??';
-      hdrB.textContent = revealHeaderNumbers ? String(rightNum) : '??';
-    }
-
-    function renderBlocks(tensContainer, onesContainer, n){
-      tensContainer.innerHTML = '';
-      onesContainer.innerHTML = '';
-      const { tens, ones } = splitTensOnes(n);
-
-      fillBlockRows(tensContainer, tplTen, ['rodSvg', 'tenBlock'], tens);
-      fillBlockRows(onesContainer, tplOne, ['cubeSvg', 'oneBlock'], ones);
-      fitStage();
-    }
-
-    function setPVBox(el, mode, valueOrPlaceholder){
-      el.classList.remove('editable');
-      el.innerHTML = '';
-
-      if (mode === 'reveal'){
-        el.textContent = valueOrPlaceholder;
-        return null;
-      }
-
-      el.classList.add('editable');
-      const inp = document.createElement('input');
-      inp.className = 'pvInput';
-      inp.inputMode = 'numeric';
-      inp.maxLength = 1;
-      inp.placeholder = valueOrPlaceholder; // blank
-      inp.addEventListener('input', ()=>{
-        const cleaned = sanitizeDigits(inp.value, 1);
-        if (inp.value !== cleaned) inp.value = cleaned;
-      });
-      el.appendChild(inp);
-      return inp;
-    }
-
-    function renderPV(){
-      const L = splitTensOnes(leftNum);
-      const R = splitTensOnes(rightNum);
-
-      [leftTensVal,leftOnesVal,rightTensVal,rightOnesVal].forEach(el=> el.classList.remove('good','bad'));
-
-      if (revealPVNumbers){
-        setPVBox(leftTensVal, 'reveal', L.tens);
-        setPVBox(leftOnesVal, 'reveal', L.ones);
-        setPVBox(rightTensVal, 'reveal', R.tens);
-        setPVBox(rightOnesVal, 'reveal', R.ones);
-        renderPV._LT = renderPV._LO = renderPV._RT = renderPV._RO = null;
-      } else {
-        renderPV._LT = setPVBox(leftTensVal, 'edit', '');
-        renderPV._LO = setPVBox(leftOnesVal, 'edit', '');
-        renderPV._RT = setPVBox(rightTensVal, 'edit', '');
-        renderPV._RO = setPVBox(rightOnesVal, 'edit', '');
-      }
-    }
-
-    function clearInputsOnly(){
-      [gtA,gtB,ltA,ltB].forEach(el=> el.value = '');
-      if (!revealPVNumbers){
-        [renderPV._LT, renderPV._LO, renderPV._RT, renderPV._RO].forEach(inp=>{
-          if (inp) inp.value = '';
-        });
-      }
-      clearMarks();
-    }
-
-    function renderAll(){
-      renderHeader();
-      renderBlocks(leftTensEl, leftOnesEl, leftNum);
-      renderBlocks(rightTensEl, rightOnesEl, rightNum);
-      renderPV();
-      clearInputsOnly();
-      syncQuickButtons();
-    }
-
-
-
-    let celebrationLayer = null;
-    let clapAudioCtx = null;
-
-    function getCelebrationLayer(){
-      if (!celebrationLayer){
-        celebrationLayer = document.createElement('div');
-        celebrationLayer.className = 'celebrationLayer';
-        celebrationLayer.setAttribute('aria-hidden','true');
-        document.body.appendChild(celebrationLayer);
-      }
-      return celebrationLayer;
-    }
-
-    function playClapSound(){
-      try{
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        clapAudioCtx = clapAudioCtx || new AudioCtx();
-        const ctx = clapAudioCtx;
-        if (ctx.state === 'suspended') ctx.resume();
-
-        const makeClap = (offset, gainLevel) => {
-          const now = ctx.currentTime + offset;
-          const length = Math.floor(ctx.sampleRate * 0.055);
-          const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
-          const data = buffer.getChannelData(0);
-          for (let i=0; i<length; i++){
-            const decay = 1 - (i / length);
-            data[i] = (Math.random() * 2 - 1) * decay * decay;
-          }
-
-          const noise = ctx.createBufferSource();
-          noise.buffer = buffer;
-
-          const band = ctx.createBiquadFilter();
-          band.type = 'bandpass';
-          band.frequency.value = 1200 + Math.random() * 850;
-          band.Q.value = 0.8;
-
-          const gain = ctx.createGain();
-          gain.gain.setValueAtTime(0.0001, now);
-          gain.gain.exponentialRampToValueAtTime(gainLevel, now + 0.006);
-          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
-
-          noise.connect(band);
-          band.connect(gain);
-          gain.connect(ctx.destination);
-          noise.start(now);
-          noise.stop(now + 0.1);
-        };
-
-        // Several quick noise bursts give a small applause effect.
-        [0, .045, .095, .16, .23, .31].forEach((offset, i)=> makeClap(offset, i < 2 ? .35 : .24));
-      } catch(err){
-        // Silent fail keeps the activity working even if audio is blocked.
-      }
-    }
-
-    function burstConfetti(){
-      const layer = getCelebrationLayer();
-      layer.innerHTML = '';
-      const colours = ['#ef4444','#f97316','#facc15','#22c55e','#06b6d4','#3b82f6','#a855f7','#ec4899'];
-      const pieces = 130;
-
-      for (let i=0; i<pieces; i++){
-        const piece = document.createElement('div');
-        piece.className = 'confettiPiece';
-        piece.style.left = (Math.random() * 100) + 'vw';
-        piece.style.background = colours[i % colours.length];
-        piece.style.setProperty('--dx', ((Math.random() * 260) - 130) + 'px');
-        piece.style.setProperty('--rot', ((Math.random() * 900) + 360) + 'deg');
-        piece.style.setProperty('--dur', (1.65 + Math.random() * .95) + 's');
-        piece.style.setProperty('--delay', (Math.random() * .22) + 's');
-        if (i % 3 === 0) piece.style.borderRadius = '999px';
-        if (i % 4 === 0) piece.style.width = '8px';
-        layer.appendChild(piece);
-      }
-
-      window.setTimeout(()=>{ layer.innerHTML = ''; }, 3200);
-    }
-
-    function celebrateCorrect(){
-      playClapSound();
-      burstConfetti();
-    }
-
-    function checkAnswers(){
-      clearMarks();
-
-      const L = splitTensOnes(leftNum);
-      const R = splitTensOnes(rightNum);
-
-      const big = Math.max(leftNum, rightNum);
-      const small = Math.min(leftNum, rightNum);
-
-      const gA = sanitizeDigits(gtA.value, 2);
-      const gB = sanitizeDigits(gtB.value, 2);
-      mark(gtA, gA !== '' && Number(gA) === big);
-      mark(gtB, gB !== '' && Number(gB) === small);
-
-      const lA = sanitizeDigits(ltA.value, 2);
-      const lB = sanitizeDigits(ltB.value, 2);
-      mark(ltA, lA !== '' && Number(lA) === small);
-      mark(ltB, lB !== '' && Number(lB) === big);
-
-      let pvOk = true;
-
-      if (!revealPVNumbers){
-        const lt = renderPV._LT ? sanitizeDigits(renderPV._LT.value, 1) : '';
-        const lo = renderPV._LO ? sanitizeDigits(renderPV._LO.value, 1) : '';
-        const rt = renderPV._RT ? sanitizeDigits(renderPV._RT.value, 1) : '';
-        const ro = renderPV._RO ? sanitizeDigits(renderPV._RO.value, 1) : '';
-
-        const okLT = lt !== '' && Number(lt) === L.tens;
-        const okLO = lo !== '' && Number(lo) === L.ones;
-        const okRT = rt !== '' && Number(rt) === R.tens;
-        const okRO = ro !== '' && Number(ro) === R.ones;
-
-        leftTensVal.classList.add(okLT ? 'good' : 'bad');
-        leftOnesVal.classList.add(okLO ? 'good' : 'bad');
-        rightTensVal.classList.add(okRT ? 'good' : 'bad');
-        rightOnesVal.classList.add(okRO ? 'good' : 'bad');
-
-        pvOk = okLT && okLO && okRT && okRO;
-      }
-
-      const compareOk =
-        gtA.classList.contains('good') && gtB.classList.contains('good') &&
-        ltA.classList.contains('good') && ltB.classList.contains('good');
-
-      const ok = compareOk && pvOk;
-
-      msg.textContent = ok
-        ? '✅ Well done!'
-        : (!revealPVNumbers && !pvOk)
-          ? 'Try again. Fill in the Tens and Ones correctly.'
-          : 'Try again. Count the tens and ones.';
-
-      if (ok) celebrateCorrect();
-    }
-
-    [gtA,gtB,ltA,ltB].forEach(inp=>{
-      inp.addEventListener('input', ()=>{
-        const cleaned = sanitizeDigits(inp.value, 2);
-        if (inp.value !== cleaned) inp.value = cleaned;
-      });
-    });
 
     function ensureNotEqual(){
       if (leftNum === rightNum){
         rightNum = (rightNum === 99) ? 98 : rightNum + 1;
         setRight.value = rightNum;
       }
+    }
+
+    function setQuestionText(){
+      const red = leftNum;
+      const blue = rightNum;
+
+      if (questionMode === 'fewer'){
+        const smallerIsBlue = blue < red;
+        const smallWord = smallerIsBlue ? 'blue' : 'red';
+        const bigWord   = smallerIsBlue ? 'red'  : 'blue';
+        qLine.textContent = `How many fewer ${smallWord} cubes than ${bigWord} cubes are there?`;
+
+        const diff = Math.abs(red-blue);
+        const cubeWord = (diff === 1) ? 'cube' : 'cubes';
+        sLine.innerHTML = `
+          There are <input class="blank small" id="ans" inputmode="numeric" maxlength="2" aria-label="Final answer">
+          fewer ${smallWord} ${cubeWord} than ${bigWord} ${cubeWord}.
+        `;
+        toggleQBtn.textContent = 'Question: FEWER';
+        qMore.checked = false;
+      } else {
+        const biggerIsBlue = blue > red;
+        const bigWord   = biggerIsBlue ? 'blue' : 'red';
+        const smallWord = biggerIsBlue ? 'red'  : 'blue';
+        qLine.textContent = `How many more ${bigWord} cubes than ${smallWord} cubes are there?`;
+
+        const diff = Math.abs(red-blue);
+        const cubeWord = (diff === 1) ? 'cube' : 'cubes';
+        sLine.innerHTML = `
+          There are <input class="blank small" id="ans" inputmode="numeric" maxlength="2" aria-label="Final answer">
+          more ${bigWord} ${cubeWord} than ${smallWord} ${cubeWord}.
+        `;
+        toggleQBtn.textContent = 'Question: MORE';
+        qMore.checked = true;
+      }
+
+      const newAns = document.getElementById('ans');
+      newAns.addEventListener('input', ()=> {
+        const cleaned = sanitizeDigits(newAns.value, 2);
+        if (newAns.value !== cleaned) newAns.value = cleaned;
+      });
+    }
+
+    function renderSide(n, tensEl, onesEl){
+      tensEl.innerHTML = '';
+      onesEl.innerHTML = '';
+
+      if (showOnesOnly){
+        tensEl.style.display = 'none';
+        for (let i=0; i<n; i++) onesEl.appendChild(cloneCube());
+      } else {
+        tensEl.style.display = 'grid';
+        const {tens, ones} = splitTensOnes(n);
+        for (let i=0; i<tens; i++) tensEl.appendChild(cloneRod());
+        for (let i=0; i<ones; i++) onesEl.appendChild(cloneCube());
+      }
+    }
+
+    function autoFitAll(){
+      const tensBoxes = [L_tens, R_tens].filter(el => el && el.style.display !== 'none');
+      const onesBoxes = [L_ones, R_ones].filter(Boolean);
+
+      const gap = 10;
+
+      let onesCols;
+      if (!showOnesOnly){
+        onesCols = 5; // ✅ 5 per row (so 9 becomes 5+4)
+      } else {
+        const maxN = Math.max(leftNum, rightNum);
+        const approx = Math.ceil(Math.sqrt(maxN));
+        onesCols = Math.max(6, Math.min(11, approx));
+      }
+      document.documentElement.style.setProperty('--onesCols', String(onesCols));
+
+      if (!showOnesOnly && tensBoxes.length){
+        const maxTens = Math.max(splitTensOnes(leftNum).tens, splitTensOnes(rightNum).tens);
+        const rodCols = Math.max(1, Math.min(5, maxTens));
+        const rodRows = Math.max(1, Math.ceil(maxTens / rodCols));
+        document.documentElement.style.setProperty('--rodCols', String(rodCols));
+
+        const minW = Math.min(...tensBoxes.map(b => b.clientWidth));
+        const minH = Math.min(...tensBoxes.map(b => b.clientHeight));
+
+        const wByWidth  = (minW - gap*(rodCols-1)) / rodCols;
+        const wByHeight = ((minH - gap*(rodRows-1)) / rodRows) / ROD_ASPECT;
+
+        let rodW = Math.floor(Math.max(9, Math.min(wByWidth, wByHeight) * FIT_SHRINK));
+        rodW = Math.min(MAX_ROD_W, rodW);
+
+        const rodH = Math.round(rodW * ROD_ASPECT);
+
+        document.documentElement.style.setProperty('--rodW', rodW + 'px');
+        document.documentElement.style.setProperty('--rodH', rodH + 'px');
+        document.documentElement.style.setProperty('--gap', gap + 'px');
+      }
+
+      const visibleOnesNow = onesBoxes.length ? Math.max(...onesBoxes.map(b => b.children.length)) : 0;
+      const baseOnesCount = showOnesOnly
+        ? Math.max(leftNum, rightNum)
+        : Math.max(splitTensOnes(leftNum).ones, splitTensOnes(rightNum).ones);
+      const maxOnesCount = Math.max(baseOnesCount, visibleOnesNow);
+
+      const rows = Math.max(1, Math.ceil(maxOnesCount / onesCols));
+      const fitRows = Math.min(rows, 3); // keep cubes readable; if more rows are needed, the ones mat scrolls
+
+      const minW1 = Math.min(...onesBoxes.map(b => b.clientWidth));
+      const minH1 = Math.min(...onesBoxes.map(b => b.clientHeight));
+
+      const sByWidth  = (minW1 - gap*(onesCols-1)) / onesCols;
+      const sByHeight = (minH1 - gap*(fitRows-1)) / fitRows;
+
+      let cubeS = Math.floor(Math.max(9, Math.min(sByWidth, sByHeight) * FIT_SHRINK));
+      cubeS = Math.min(MAX_CUBE, cubeS);
+
+      document.documentElement.style.setProperty('--cubeS', cubeS + 'px');
+      document.documentElement.style.setProperty('--gap', gap + 'px');
+    }
+
+    function scrollOnesIfNeeded(el){
+      if (!el) return;
+      requestAnimationFrame(()=>{
+        if (el.scrollHeight > el.clientHeight + 2){
+          el.scrollTop = el.scrollHeight;
+        }
+      });
+    }
+
+    function restoreOriginalBlocks(){
+      renderSide(leftNum,  L_tens, L_ones);
+      renderSide(rightNum, R_tens, R_ones);
+      requestAnimationFrame(()=> autoFitAll());
+    }
+
+    function clearInputsOnly(){
+      hasChecked = false;
+      animBusy = false;
+      visualRegroupShown = false;
+      clearMarks();
+      restoreOriginalBlocks();
+      [qRed,qBlue,eqA,eqB,eqC,L_tIn,L_oIn,R_tIn,R_oIn].forEach(i=> i.value='');
+      const a = document.getElementById('ans'); if (a) a.value='';
+      [...L_ones.children, ...R_ones.children, ...L_tens.children, ...R_tens.children].forEach(el=> el.classList.remove('diffGrey'));
+      applyVisibilityOptions();
+    }
+
+    function renderAll(){
+      syncTeacherToggleUI();
+      setQuestionText();
+      renderSide(leftNum,  L_tens, L_ones);
+      renderSide(rightNum, R_tens, R_ones);
+      clearInputsOnly();
+      applyVisibilityOptions();
+
+      requestAnimationFrame(()=> {
+        autoFitAll();
+        renderSide(leftNum,  L_tens, L_ones);
+        renderSide(rightNum, R_tens, R_ones);
+        applyVisibilityOptions();
+      });
+    }
+
+    function validateCounts(){
+      let okR = true;
+      let okB = true;
+
+      if (!showQuestionNumbers){
+        const qr = sanitizeDigits(qRed.value, 2);
+        const qb = sanitizeDigits(qBlue.value, 2);
+        okR = qr !== '' && Number(qr) === leftNum;
+        okB = qb !== '' && Number(qb) === rightNum;
+        markInp(qRed, okR);
+        markInp(qBlue, okB);
+      } else {
+        qRed.classList.remove('good','bad');
+        qBlue.classList.remove('good','bad');
+      }
+
+      let okLT = true;
+      let okLO = true;
+      let okRT = true;
+      let okRO = true;
+
+      if (!showPlaceValueNumbers){
+        const L = splitTensOnes(leftNum);
+        const R = splitTensOnes(rightNum);
+
+        const lt = sanitizeDigits(L_tIn.value, 1);
+        const lo = sanitizeDigits(L_oIn.value, 1);
+        const rt = sanitizeDigits(R_tIn.value, 1);
+        const ro = sanitizeDigits(R_oIn.value, 1);
+
+        okLT = lt !== '' && Number(lt) === L.tens;
+        okLO = lo !== '' && Number(lo) === L.ones;
+        okRT = rt !== '' && Number(rt) === R.tens;
+        okRO = ro !== '' && Number(ro) === R.ones;
+
+        markBox(L_tVal, okLT);
+        markBox(L_oVal, okLO);
+        markBox(R_tVal, okRT);
+        markBox(R_oVal, okRO);
+      } else {
+        [L_tVal,L_oVal,R_tVal,R_oVal].forEach(b=>b.classList.remove('good','bad'));
+      }
+
+      return okR && okB && okLT && okLO && okRT && okRO;
+    }
+
+    function expectedEquation(){
+      const big = Math.max(leftNum, rightNum);
+      const small = Math.min(leftNum, rightNum);
+      return { big, small, diff: big-small, bigIsLeft: leftNum > rightNum };
+    }
+
+    function validateEquation(){
+      const {big, small, diff} = expectedEquation();
+      const a = sanitizeDigits(eqA.value, 2);
+      const b = sanitizeDigits(eqB.value, 2);
+      const c = sanitizeDigits(eqC.value, 2);
+      const d = sanitizeDigits((document.getElementById('ans')?.value ?? ''), 2);
+
+      const okA = a !== '' && Number(a) === big;
+      const okB = b !== '' && Number(b) === small;
+      const okC = c !== '' && Number(c) === diff;
+      const okD = d !== '' && Number(d) === diff;
+
+      markInp(eqA, okA);
+      markInp(eqB, okB);
+      markInp(eqC, okC);
+      const ansEl = document.getElementById('ans');
+      if (ansEl) markInp(ansEl, okD);
+
+      return okA && okB && okC && okD;
+    }
+
+    function clearGrey(){
+      [...L_ones.children, ...R_ones.children, ...L_tens.children, ...R_tens.children].forEach(el=> el.classList.remove('diffGrey'));
+    }
+
+    async function animateRegroupThenGrey(){
+      const {diff, bigIsLeft} = expectedEquation();
+      if (diff <= 0) return;
+
+      const tensEl = bigIsLeft ? L_tens : R_tens;
+      const onesEl = bigIsLeft ? L_ones : R_ones;
+
+      if (showOnesOnly){
+        const kids = [...onesEl.children];
+        for (let i=kids.length-1, k=0; i>=0 && k<diff; i--, k++){
+          kids[i].classList.add('diffGrey');
+          await sleep(35);
+        }
+        return;
+      }
+
+      const bigN = bigIsLeft ? leftNum : rightNum;
+      let {tens, ones} = splitTensOnes(bigN);
+
+      while (ones < diff && tens > 0){
+        const rods = [...tensEl.children];
+        const rod = rods[rods.length-1];
+        if (!rod) break;
+
+        msg.textContent = 'Watch closely: 1 ten will be regrouped into 10 ones.';
+        rod.classList.add('rodFocusGlow');
+        await sleep(850);
+        rod.classList.remove('rodFocusGlow');
+        rod.classList.add('rodBorrow');
+
+        const r1 = rod.getBoundingClientRect();
+        const r2 = onesEl.getBoundingClientRect();
+        const dx = (r2.left + r2.width*0.72) - (r1.left + r1.width*0.5);
+        const dy = (r2.top + r2.height*0.50) - (r1.top + r1.height*0.6);
+
+        whoosh({dur:0.58, from:1200, to:220, vol:0.34});
+
+        rod.style.transform = `translate(${dx}px, ${dy}px) scale(.80)`;
+        rod.style.opacity = '0.14';
+        await sleep(1280);
+
+        rod.remove();
+        tens -= 1;
+
+        msg.textContent = 'Now the 1 ten is becoming 10 ones.';
+        whoosh({dur:0.75, from:950, to:140, vol:0.36});
+
+        const newCubes = [];
+        for (let i=0; i<10; i++){
+          const c = cloneCube();
+          c.classList.add('cubeSpawn','cubeFresh');
+          onesEl.appendChild(c);
+          newCubes.push(c);
+          requestAnimationFrame(()=> c.classList.add('in'));
+          await sleep(i === 4 ? 180 : 115);
+        }
+        ones += 10;
+
+        autoFitAll();
+        scrollOnesIfNeeded(onesEl);
+        await sleep(260);
+        newCubes.forEach(c => c.classList.remove('cubeFresh'));
+        msg.textContent = '1 ten = 10 ones. Now compare the extra cubes.';
+        await sleep(260);
+      }
+
+      const kids = [...onesEl.children];
+      for (let i=kids.length-1, k=0; i>=0 && k<diff; i--, k++){
+        kids[i].classList.add('diffGrey');
+        await sleep(42);
+      }
+      scrollOnesIfNeeded(onesEl);
+    }
+
+    async function checkAnswers(){
+      if (animBusy) return;
+      clearMarks();
+      hasChecked = true;
+
+      const okCounts = validateCounts();
+      const okEq = validateEquation();
+      const allOk = okCounts && okEq;
+
+      if (!allOk){
+        if (!visualRegroupShown) clearGrey();
+        msg.textContent = 'Try again (question numbers / tens / ones / subtraction).';
+        return;
+      }
+
+      if (visualRegroupShown){
+        msg.textContent = '✅ Already checked. The regrouping is already shown correctly.';
+        const {bigIsLeft} = expectedEquation();
+        scrollOnesIfNeeded(bigIsLeft ? L_ones : R_ones);
+        return;
+      }
+
+      clearGrey();
+      animBusy = true;
+      try{
+        await animateRegroupThenGrey();
+        visualRegroupShown = true;
+      }
+      finally{ animBusy = false; }
+
+      msg.textContent = '✅ Well done!';
+      celebrateCorrect();
     }
 
     function applyNumbers(){
@@ -1147,59 +1457,69 @@
       const a = 1 + Math.floor(Math.random()*99);
       let b = 1 + Math.floor(Math.random()*99);
       if (b === a) b = (b === 99) ? 98 : b + 1;
-
       setLeft.value = a;
       setRight.value = b;
       applyNumbers();
     }
 
-    function setRevealHeader(on){
-      revealHeaderNumbers = !!on;
-      revealHeader.checked = revealHeaderNumbers;
-      renderHeader();
-      syncQuickButtons();
+    function toggleQuestion(){
+      questionMode = (questionMode === 'fewer') ? 'more' : 'fewer';
+      renderAll();
     }
-    function setRevealPV(on){
-      revealPVNumbers = !!on;
-      revealPV.checked = revealPVNumbers;
-      renderPV();
+
+    [qRed,qBlue,eqA,eqB,eqC].forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        const cleaned = sanitizeDigits(inp.value, 2);
+        if (inp.value !== cleaned) inp.value = cleaned;
+      });
+    });
+    [L_tIn,L_oIn,R_tIn,R_oIn].forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        const cleaned = sanitizeDigits(inp.value, 1);
+        if (inp.value !== cleaned) inp.value = cleaned;
+      });
+    });
+
+    [setLeft,setRight].forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        const cleaned = sanitizeDigits(inp.value, 2);
+        if (inp.value !== cleaned) inp.value = cleaned;
+      });
+    });
+
+    qMore.addEventListener('change', ()=>{
+      questionMode = qMore.checked ? 'more' : 'fewer';
+      renderAll();
+    });
+    showQuestionToggle.addEventListener('change', ()=>{
+      showQuestionNumbers = showQuestionToggle.checked;
       clearInputsOnly();
-      syncQuickButtons();
-    }
+    });
 
-    function syncQuickButtons(){
-      // button styles
-      quickHeaderBtn.classList.toggle('toggle-on', revealHeaderNumbers);
-      quickPVBtn.classList.toggle('toggle-on', revealPVNumbers);
+    showPVToggle.addEventListener('change', ()=>{
+      showPlaceValueNumbers = showPVToggle.checked;
+      clearInputsOnly();
+    });
 
-      // button text
-      quickHeaderBtn.textContent = revealHeaderNumbers ? 'Header: ON' : 'Header: OFF';
-      quickPVBtn.textContent = revealPVNumbers ? 'Tens/Ones: ON' : 'Tens/Ones: OFF';
-    }
-
-    // Teacher toggle switches
-    revealHeader.addEventListener('change', ()=> setRevealHeader(revealHeader.checked));
-    revealPV.addEventListener('change', ()=> setRevealPV(revealPV.checked));
-
-    // Drawer buttons
     applyBtn.addEventListener('click', applyNumbers);
     randomBtn.addEventListener('click', randomizeNumbers);
-    teacherClear.addEventListener('click', clearInputsOnly);
+    randomBtnMain.addEventListener('click', randomizeNumbers);
+    toggleQBtn.addEventListener('click', toggleQuestion);
 
-    // Main buttons
+    // unlock audio on first user gesture
+    function unlockAudio(){
+      try{
+        const ac = audioCtx();
+        if (ac.state === 'suspended') ac.resume();
+      }catch(e){}
+      window.removeEventListener('pointerdown', unlockAudio, {capture:true});
+    }
+    window.addEventListener('pointerdown', unlockAudio, {capture:true, once:true});
+
     checkBtn.addEventListener('click', checkAnswers);
     clearBtn.addEventListener('click', clearInputsOnly);
+    teacherClear.addEventListener('click', clearInputsOnly);
 
-    // ✅ NEW quick buttons beside Check
-    quickRandomBtn.addEventListener('click', randomizeNumbers);
-    quickHeaderBtn.addEventListener('click', ()=> setRevealHeader(!revealHeaderNumbers));
-    quickPVBtn.addEventListener('click', ()=> setRevealPV(!revealPVNumbers));
-
-    // size sliders
-    tenWRange.addEventListener('input', applySizes);
-    oneSRange.addEventListener('input', applySizes);
-
-    // Drawer open/close (no dimming, no blocking chart)
     function openDrawer(){
       overlay.classList.add('show');
       drawer.classList.add('show');
@@ -1220,12 +1540,9 @@
     overlay.addEventListener('click', closeDrawer);
     window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') closeDrawer(); });
 
-    // Init
-    setLeft.value = leftNum;
-    setRight.value = rightNum;
+    window.addEventListener('resize', ()=> requestAnimationFrame(()=> autoFitAll()));
 
     fitStage();
-    applySizes();
     renderAll();
   </script>
 <script src="https://cdn.counter.dev/script.js" data-id="825e93b6-ce99-40ef-8bcc-125f13297433" data-utcoffset="8"></script>
