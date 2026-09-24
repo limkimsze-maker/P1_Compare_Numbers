@@ -764,7 +764,7 @@
       const s = Math.min(availW / baseW, availH / baseH);
 
       const left = margin + Math.max(0, (availW - baseW * s) / 2);
-      const top = margin + Math.max(0, (availH - baseH * s) / 2);
+      const top = window.innerWidth < 760 ? margin : margin + Math.max(0, (availH - baseH * s) / 2);
 
       stage.style.left = `${left}px`;
       stage.style.top = `${top}px`;
